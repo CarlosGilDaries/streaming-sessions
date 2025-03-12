@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use App\Models\UserSession;
+
+class UserController extends Controller
+{
+    public function cambiarPlan(Request $request)
+    {
+        $user = Auth::user();
+
+        if ($user->plan == 'sencillo') {
+            $user->plan = 'premium';
+            $user->max_devices = 4;
+            $maxDevices = 4;
+        } else {
+            $user->plan = 'sencillo';
+            $user->max_devices = 2;
+            $maxDevices = 2;
+        }
+
+        $user->save();
+
+        $deviceCount = UserSession::where('user_id', $user->id)->count();
+
+        // Si hay más sesiones que el nuevo límite, eliminar las más antiguas
+        if ($deviceCount > $maxDevices) {
+            // Obtener las sesiones más antiguas (ordenadas por last_activity)
+            $sessionsToDelete = UserSession::where('user_id', $user->id)
+                ->orderBy('last_activity', 'asc')
+                ->limit($deviceCount - $maxDevices)
+                ->get();
+
+            // Eliminar las sesiones más antiguas
+            foreach ($sessionsToDelete as $session) {
+                $session->delete();
+            }
+        }
+
+        return redirect()->route('user');
+    }
+}
+
