@@ -11,6 +11,9 @@ class UserController extends Controller
     public function cambiarPlan(Request $request)
     {
         $user = Auth::user();
+        $ip = getClientIp();
+        $device_id = $request->cookie('device_id');
+        $userAgent = $request->header('User-Agent');
 
         if ($user->plan == 'sencillo') {
             $user->plan = 'premium';
@@ -38,6 +41,21 @@ class UserController extends Controller
             foreach ($sessionsToDelete as $session) {
                 $session->delete();
             }
+        }
+
+
+        $session = UserSession::where('user_id', $user->id)
+            ->where('device_id', $device_id)
+            ->where('ip_address', $ip)
+            ->where('user_agent', $userAgent)
+            ->first();
+        
+        if (!$session) {
+            return redirect()->route('device.name.form')->with([
+                'device_id' => $device_id,
+                'ip' => $ip,
+                'userAgent' => $userAgent,
+            ]);
         }
 
         return redirect()->route('user');

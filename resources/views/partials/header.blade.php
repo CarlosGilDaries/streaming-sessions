@@ -1,8 +1,7 @@
-<a href="{{ route('principal') }}"><h1>Plataforma de Streaming</h1></a>
-<a href="{{ route('login') }}">
-    @if(Auth::check())
-        {{ Auth::user()->name }}
-    @else
-        Inicio de sesión
-    @endif
-</a><br><br>
+@if(Auth::check())
+    <a href="{{ route('principal') }}"><h1>Plataforma de Streaming</h1></a>
+    <a href="{{ route('login') }}">{{ Auth::user()->name }}</a><br><br>
+@else
+    <a href="{{ route('welcome') }}"><h1>Plataforma de Streaming</h1></a>
+    <a href="{{ route('login') }}">Inicio de sesión</a><br><br>
+@endif

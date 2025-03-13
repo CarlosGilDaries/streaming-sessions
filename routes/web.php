@@ -5,7 +5,6 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserSessionController;
-use App\Http\Controllers\UserAgentController;
 use App\Http\Middleware\EnsureDeviceSessionExists;
 
 Route::get('/', function () {
@@ -52,6 +51,17 @@ Route::middleware(['auth'])->group(function () {
         return view('plans.index');
     })
         ->name('planes');
+    
+    Route::get('planes-2', function () {
+        return view('plans.index-2');
+    })
+        ->name('planes.2');
+
+    Route::get('/verify-device', [UserController::class, 'verifyDevice'])
+        ->name('verify.device');
+
+    Route::post('/verify-device', [UserController::class, 'validateDevice']);
+
 });
 
 Route::get('login', [LoginController::class, 'loginForm'])

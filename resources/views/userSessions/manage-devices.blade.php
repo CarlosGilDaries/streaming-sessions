@@ -16,5 +16,7 @@
         @endforeach
     </ul>
 
+    <a href="{{ route('planes.2') }}"><h3>Cambiar plan</h3></a>
+
     <a href="{{ route('logout') }}">Cancelar</a>
 @endsection

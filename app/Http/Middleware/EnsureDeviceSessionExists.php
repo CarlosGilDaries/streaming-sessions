@@ -15,13 +15,16 @@ class EnsureDeviceSessionExists
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Obtener ID del usuario autenticado
         $userId = Auth::id();
         $device_id = $request->cookie('device_id');
+        $ip = getClientIp();
+        $userAgent = $request->header('User-Agent');
 
         // Verificar si el dispositivo está registrado en user_sessions
         $sessionExists = UserSession::where('user_id', $userId)
                                     ->where('device_id', $device_id)
+                                    ->where('ip_address', $ip)
+                                    ->where('user_agent', $userAgent)
                                     ->exists();
 
         if (!$sessionExists) {

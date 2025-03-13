@@ -11,15 +11,11 @@ class UserSessionController extends Controller
 {
     public function showForm(Request $request)
     {
-        if (session('device_id')) {
-            return view('userSessions.device-name', [
-                'device_id' => session('device_id')
-            ]);
-        } else {
-            return view('userSessions.device-name', [
-                'device_id' => $request->device_id
-            ]);
-        }
+        return view('userSessions.device-name', [
+            'device_id' => $request->device_id,
+            'ip' => $request->ip,
+            'userAgent' => $request->userAgent
+        ]);
     }
 
     public function store(Request $request)
@@ -36,7 +32,7 @@ class UserSessionController extends Controller
             'token' => Str::random(60),
             'device_name' => $request->device_name,
             'ip_address' => $request->ip,
-            'browser_device' => $request->browser,
+            'user_agent' => $request->userAgent,
             'last_activity' => now(),
         ]);
 
@@ -52,10 +48,14 @@ class UserSessionController extends Controller
     
         // Obtener los dispositivos del usuario
         $userSessions = UserSession::where('user_id', $user->id)->get();
+        $ip = getClientIp();
+        $userAgent = $request->header('User-Agent');
     
         return view('userSessions.manage-devices', [
             'devices' => $userSessions,
-            'device_id' => $request->device_id
+            'device_id' => $request->device_id,
+            'ip' => $ip,
+            'userAgent' => $userAgent,
         ]);
     }
 
@@ -63,7 +63,13 @@ class UserSessionController extends Controller
     public function destroy(string $id, Request $request)
     {
         UserSession::where('id', $id)->delete();
+
+        $ip = getClientIp();
+        $userAgent = $request->header('User-Agent');
         
-        return redirect()->route('device.name.form');
+        return redirect()->route('device.name.form')->with([
+            'ip' => $ip,
+            'userAgent' => $userAgent,
+        ]);
     }
 }

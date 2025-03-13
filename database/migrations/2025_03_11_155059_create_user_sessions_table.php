@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('device_id');
             $table->string('device_name');
             $table->string('token')->unique();
+            $table->string('ip_address');
+            $table->string('user_agent');
             $table->timestamp('last_activity')->useCurrent();
         });
     }

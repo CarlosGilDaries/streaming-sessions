@@ -5,15 +5,18 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UserSession;
-use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Artisan;
 
 
 class LoginController extends Controller
 {
     public function loginForm()
     {
+        // Ejecuta el comando para crear el usuario predeterminado si es necesario
+        Artisan::call('create:default-user');
+
         if (Auth::viaRemember()) {
             return redirect()->route('user');
         } else if (Auth::check()) {
@@ -40,10 +43,14 @@ class LoginController extends Controller
 
         if (Auth::guard('web')->attempt($credentials, $remember)) {
             $user = Auth::user();
+            $ip = getClientIp();
+            $userAgent = $request->header('User-Agent');
 
             // Verificar si ya existe una sesión para este usuario desde este dispositivo/IP
             $session = UserSession::where('user_id', $user->id)
                 ->where('device_id', $device_id)
+                ->where('ip_address', $ip)
+                ->where('user_agent', $userAgent)
                 ->first();
 
             // Verificar la cantidad de dispositivos activos del usuario
@@ -51,19 +58,36 @@ class LoginController extends Controller
             $deviceCount = UserSession::where('user_id', $user->id)->count();
 
             // Si el usuario ha excedido el límite de dispositivos, redirigir para gestionar dispositivos
-            if ($deviceCount >= $maxDevices && !$session) {
-                // Obtener los dispositivos registrados para el usuario
-                $userSessions = UserSession::where('user_id', $user->id)->get();
-                return redirect()->route('manage.devices')->with([
-                    'devices' => $userSessions,
-                    'device_id' => $device_id
-                ]);
-            }
+            if ($session) {
+                if (($deviceCount >= $maxDevices && !$session) || ($session->ip_address !== $ip || $session->user_agent !== $userAgent)) {
+                    // Obtener los dispositivos registrados para el usuario
+                    $userSessions = UserSession::where('user_id', $user->id)->get();
+                    return redirect()->route('manage.devices')->with([
+                        'devices' => $userSessions,
+                        'device_id' => $device_id,
+                        'ip' => $ip,
+                        'userAgent' => $userAgent,
+                    ]);
+                }
 
-            if (!$session) {
-                return redirect()->route('device.name.form')->with([
-                    'device_id' => $device_id
-                ]);
+            } else {
+                if ($deviceCount >= $maxDevices && !$session) {
+                    // Obtener los dispositivos registrados para el usuario
+                    $userSessions = UserSession::where('user_id', $user->id)->get();
+                    return redirect()->route('manage.devices')->with([
+                        'devices' => $userSessions,
+                        'device_id' => $device_id,
+                        'ip' => $ip,
+                        'userAgent' => $userAgent,
+                    ]);
+
+                } else {
+                    return redirect()->route('device.name.form')->with([
+                        'device_id' => $device_id,
+                        'ip' => $ip,
+                        'userAgent' => $userAgent,
+                    ]);
+                }
             }
 
             $request->session()->regenerate();
