@@ -38,7 +38,7 @@ class LoginController extends Controller
             // Si no existe un device_id, generar uno nuevo (UUID)
             $device_id = Str::uuid();
             // Almacenar el device_id en una cookie persistente
-            Cookie::queue('device_id', $device_id, 60 * 24 * 365, null, null, true, true); // Expira en 1 año
+            Cookie::queue('device_id', $device_id, 60 * 24 * 365, null, null, false, true);  // Expira en 1 año
         }
 
         if (Auth::guard('web')->attempt($credentials, $remember)) {
@@ -54,43 +54,44 @@ class LoginController extends Controller
                 ->first();
 
             // Verificar la cantidad de dispositivos activos del usuario
-            $maxDevices = $user->max_devices;
+            $plan = $user->plan;
+            if ($plan == "sencillo") {
+                $maxDevices = 2;
+            } else {
+                $maxDevices = 4;
+            }
             $deviceCount = UserSession::where('user_id', $user->id)->count();
 
             // Si el usuario ha excedido el límite de dispositivos, redirigir para gestionar dispositivos
-            if ($session) {
-                if (($deviceCount >= $maxDevices && !$session) || ($session->ip_address !== $ip || $session->user_agent !== $userAgent)) {
-                    // Obtener los dispositivos registrados para el usuario
-                    $userSessions = UserSession::where('user_id', $user->id)->get();
-                    return redirect()->route('manage.devices')->with([
-                        'devices' => $userSessions,
-                        'device_id' => $device_id,
-                        'ip' => $ip,
-                        'userAgent' => $userAgent,
-                    ]);
-                }
+            if ((!$session) && ($deviceCount >= $maxDevices)) {
+                // Generar una nueva cookie para respetar la unicidad
+                $new_device_id = Str::uuid();
+                Cookie::queue('device_id', $new_device_id, 60 * 24 * 365, null, null, false, true); 
 
-            } else {
-                if ($deviceCount >= $maxDevices && !$session) {
-                    // Obtener los dispositivos registrados para el usuario
-                    $userSessions = UserSession::where('user_id', $user->id)->get();
-                    return redirect()->route('manage.devices')->with([
-                        'devices' => $userSessions,
-                        'device_id' => $device_id,
-                        'ip' => $ip,
-                        'userAgent' => $userAgent,
-                    ]);
+                // Obtener los dispositivos registrados para el usuario
+                $userSessions = UserSession::where('user_id', $user->id)->get();
+                return redirect()->route('manage.devices')->with([
+                    'devices' => $userSessions,
+                    'device_id' => $new_device_id,
+                    'ip' => $ip,
+                    'userAgent' => $userAgent,
+                ]);
+            }
+            if ((!$session) && ($deviceCount < $maxDevices)) {
+                // Generar una nueva cookie para respetar la unicidad
+                $new_device_id = Str::uuid();
+                Cookie::queue('device_id', $new_device_id, 60 * 24 * 365, null, null, false, true); 
 
-                } else {
-                    return redirect()->route('device.name.form')->with([
-                        'device_id' => $device_id,
-                        'ip' => $ip,
-                        'userAgent' => $userAgent,
-                    ]);
-                }
+                return redirect()->route('device.name.form')->with([
+                    'device_id' => $new_device_id,
+                    'ip' => $ip,
+                    'userAgent' => $userAgent,
+                ]);
             }
 
             $request->session()->regenerate();
+            $session->last_activity = now();
+            $session->save();
 
             return redirect()->route('principal');
         }

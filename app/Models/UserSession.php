@@ -16,7 +16,13 @@ class UserSession extends Model
         'last_activity'
     ];
 
-    public function user() {
+    public function user() 
+    {
         return $this->belongsTo(User::class);
+    }
+
+    public function ActiveStream() 
+    {
+        return $this->hasOne(ActiveStream::class);
     }
 }

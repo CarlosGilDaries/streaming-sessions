@@ -11,16 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_sessions', function (Blueprint $table) {
+        Schema::create('active_streams', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('device_id')->unique();
-            $table->string('device_name');
-            $table->string('token')->unique();
-            $table->string('ip_address');
-            $table->string('user_agent');
-            $table->timestamp('last_activity')->useCurrent();
-        });
+            $table->string('device_id');
+            $table->timestamp('last_active_at')->nullable();
+            $table->timestamps();
+        
+            $table->foreign('device_id')->references('device_id')->on('user_sessions')->onDelete('cascade');
+        });     
     }
 
     /**
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_sessions');
+        Schema::dropIfExists('active_streams');
     }
 };

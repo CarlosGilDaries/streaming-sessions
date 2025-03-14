@@ -7,7 +7,7 @@
 
     <form method="POST" action="{{ route('device.name.store') }}">
         @csrf
-        <input type="hidden" name="device_id" value="{{ $device_id }}">
+        <input type="hidden" name="device_id" value="{{ session('device_id') }}">
         <input type="hidden" name="ip" value="{{ session('ip') }}">
         <input type="hidden" name="userAgent" value="{{ session('userAgent') }}">
 

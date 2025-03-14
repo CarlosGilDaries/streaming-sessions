@@ -25,8 +25,14 @@ class User extends Authenticatable
         'max_devices'
     ];
 
-    public function sessions() {
+    public function sessions() 
+    {
         return $this->hasMany(UserSession::class);
+    }
+
+    public function ActiveStreams() 
+    {
+        return $this->hasMany(ActiveStream::class);
     }
 
     /**

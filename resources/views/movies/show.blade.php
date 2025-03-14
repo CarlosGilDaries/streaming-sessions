@@ -1,4 +1,4 @@
-@extends('layout')
+@extends('layout-movies')
 
 @section('content')
     <h2>{{ $movie->title }}</h2>
@@ -12,4 +12,6 @@
     </video>
     <br>
     <a href="{{ route('movies') }}">Volver al contenido</a>
+
+    <script src="{{ asset('js/active-streams.js') }}"></script>
 @endsection

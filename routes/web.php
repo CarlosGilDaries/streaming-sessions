@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActiveStreamController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MovieController;
@@ -57,10 +58,31 @@ Route::middleware(['auth'])->group(function () {
     })
         ->name('planes.2');
 
-    Route::get('/verify-device', [UserController::class, 'verifyDevice'])
+    Route::get('verify-device', [UserController::class, 'verifyDevice'])
         ->name('verify.device');
 
-    Route::post('/verify-device', [UserController::class, 'validateDevice']);
+    Route::post('verify-device', [UserController::class, 'validateDevice']);
+
+    Route::get('movies/{id}/get-device-id', function () {
+        $deviceId = request()->cookie('device_id');
+    
+        if ($deviceId) {
+            return response()->json(['device_id' => $deviceId]);
+        } else {
+            return response()->json(['error' => 'No device_id found'], 400);
+        }
+    })
+    ->middleware(EnsureDeviceSessionExists::class);
+    
+    Route::post('start-stream', [ActiveStreamController::class, 'startStream'])
+        ->middleware(EnsureDeviceSessionExists::class);
+
+    Route::get('streams-limit-reached', function () {
+        return view('userSessions.streams-limit-reached');
+        })->name('streams-limit-reached')
+        ->middleware(EnsureDeviceSessionExists::class);
+
+    Route::post('keep-alive', [ActiveStreamController::class, 'keepAlive']);
 
 });
 
