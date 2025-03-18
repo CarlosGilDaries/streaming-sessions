@@ -14,7 +14,7 @@ class LoginController extends Controller
 {
     public function loginForm()
     {
-        // Ejecuta el comando para crear el usuario predeterminado si es necesario
+        // Ejecuta el comando para crear usuarios predeterminados si es necesario
         Artisan::call('create:default-user');
 
         if (Auth::viaRemember()) {

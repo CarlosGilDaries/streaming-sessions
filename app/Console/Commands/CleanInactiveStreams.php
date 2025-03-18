@@ -20,7 +20,7 @@ class CleanInactiveStreams extends Command
      *
      * @var string
      */
-    protected $description = 'Elimina streams inactivos después de 5 minutos sin actividad';
+    protected $description = 'Elimina streams inactivos después de 1 minuto sin actividad';
 
     /**
      * Execute the console command.
