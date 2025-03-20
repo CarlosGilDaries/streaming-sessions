@@ -33,8 +33,10 @@ class UserController extends Controller
         ->where('user_agent', $userAgent)
         ->first();
 
-        $session->last_activity = now();
-        $session->save();
+        if ($session) {
+            $session->last_activity = now();
+            $session->save();
+        }
 
         $deviceCount = UserSession::where('user_id', $user->id)->count();
 
