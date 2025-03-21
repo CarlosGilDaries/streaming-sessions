@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\UserSession;
+use App\Models\ActiveStream;
 
 class UserController extends Controller
 {
@@ -23,6 +24,14 @@ class UserController extends Controller
             $user->plan = 'sencillo';
             $user->max_devices = 2;
             $maxDevices = 2;
+            $activeStreams = ActiveStream::where('user_id', $user->id)->orderByDesc('last_active_at')->get();
+            if ($activeStreams->count() > 1) {
+                // Mantener el más reciente y eliminar el resto
+                $latestStream = $activeStreams->first();
+                ActiveStream::where('user_id', $user->id)
+                    ->where('id', '!=', $latestStream->id)
+                    ->delete();
+            }
         }
 
         $user->save();
